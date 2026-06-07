@@ -17,6 +17,7 @@ from utility import (
     JobTypes,
     make_uri,
     retry,
+    load_codes
 )
 from database.db import get_session
 from database.models import (
@@ -447,9 +448,7 @@ async def collect_jobs() -> Optional[List[UploadJobs]]:
 
 async def main():
 
-    with open("internal_tools/codes.json", "r") as reader:
-        code_holder = json.load(reader)
-
+    code_holder = load_codes(s3_api)
     get_devices(code_holder)
 
     subprocess.run(["pactl", "set-default-sink", "virtual_sink"], check=True)
