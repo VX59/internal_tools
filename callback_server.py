@@ -3,6 +3,7 @@ import urllib.parse
 import webbrowser
 import secrets
 import base64
+import json
 import requests
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -94,7 +95,7 @@ print("Waiting for Spotify callback...")
 server.handle_request()  # blocks until callback is handled, tokens set inside do_GET
 server.server_close()
 
-"""# Wait for do_GET to finish setting tokens (handle_request can return slightly before)
+# Wait for do_GET to finish setting tokens (handle_request can return slightly before)
 token_event.wait(timeout=5)
 
 if code_holder.get("access_token"):
@@ -102,4 +103,4 @@ if code_holder.get("access_token"):
         json.dump(code_holder, writer)
     print("Tokens saved to codes.json")
 else:
-    print("ERROR: no access token received")"""
+    print("ERROR: no access token received")
