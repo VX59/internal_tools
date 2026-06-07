@@ -47,7 +47,7 @@ session_maker: sessionmaker = get_session()
 
 
 def get_devices(code_holder):
-    @retry(code_holder)
+    @retry(code_holder, label="get devices")
     def request_get_devices():
         return requests.get(
             url="https://api.spotify.com/v1/me/player/devices",
@@ -74,7 +74,7 @@ device_id = None
 
 
 def activate_device(code_holder, device_id):
-    @retry(code_holder)
+    @retry(code_holder, label=f"request activate device {device_id}")
     def request_activate_device():
         return requests.put(
             "https://api.spotify.com/v1/me/player",
@@ -88,8 +88,8 @@ def activate_device(code_holder, device_id):
     request_activate_device()
 
 
-def trigger_playback(code_holder, uri: str, retries=0):
-    @retry(code_holder)
+def trigger_playback(code_holder, uri: str):
+    @retry(code_holder, label="trigger playback")
     def request_trigger_playback():
         return requests.put(
             url="https://api.spotify.com/v1/me/player/play",
@@ -117,7 +117,7 @@ def record_virtual_audio(output_file: str):
 
 
 def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
-    @retry(code_holder)
+    @retry(code_holder, label="wait until playing")
     def poll():
         return requests.get(
             "https://api.spotify.com/v1/me/player",
