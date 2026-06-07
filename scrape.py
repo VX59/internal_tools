@@ -155,8 +155,6 @@ async def scrape_records(code_holder, job: UploadJobs):
     record_list: list[spotify_item] = pickle.loads(data)
     records_progress: list[spotify_item] = record_list[job.progress :]
 
-    activate_device(code_holder=code_holder, device_id=device_id)
-
     for i, record in tqdm(enumerate(records_progress)):
         external_record_uri = record.uri
 
