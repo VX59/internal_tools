@@ -210,9 +210,9 @@ async def scrape_records(code_holder, job: UploadJobs):
 
         else:
             raise ValueError(f"unsupported job type {job.job_type}")
-
-        if job.status == JobStatus.failed:
-            async with session_maker() as session:
+        
+        async with session_maker() as session:
+            if job.status == JobStatus.failed:
                 stmt = (
                     update(UploadJobs)
                     .where(
@@ -220,9 +220,17 @@ async def scrape_records(code_holder, job: UploadJobs):
                     )
                     .values(status=JobStatus.retrying)
                 )
+            else:
+                stmt = (
+                    update(UploadJobs)
+                    .where(
+                        UploadJobs.uri == job.uri,
+                    )
+                    .values(status=JobStatus.in_progress)
+                )
 
-                await session.execute(stmt)
-                await session.commit()
+            await session.execute(stmt)
+            await session.commit()
 
         obj_key = f"musiql_dump/{internal_record_uri}.wav"
 
