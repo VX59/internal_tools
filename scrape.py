@@ -421,11 +421,14 @@ async def scrape_records(code_holder, job: UploadJobs):
 
             await session.commit()
 
+        if job.status == JobStatus.finished:
+            s3_api.delete_object(metadata_obj_key)
+
         s3_api.commit_multipart_upload(
             obj_path=obj_key, key=obj_key, upload_id=upload_id, parts=parts
         )
 
-        s3_api.delete_object(metadata_obj_key)
+
 
 
 async def collect_jobs() -> Optional[List[UploadJobs]]:
