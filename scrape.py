@@ -458,7 +458,6 @@ async def collect_jobs() -> Optional[List[UploadJobs]]:
 async def main():
 
     code_holder = load_codes(s3_api)
-    get_devices(code_holder)
 
     subprocess.run(["pactl", "set-default-sink", "virtual_sink"], check=True)
     print("Default sink set to virtual_sink")
