@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime
 import os
-import json
 import shutil
 from musiql_api.data_models import spotify_item
 from settings import Settings, get_settings
