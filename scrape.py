@@ -10,14 +10,7 @@ import signal
 
 import time
 
-from utility import (
-    logger,
-    JobStatus,
-    JobTypes,
-    make_uri,
-    retry,
-    load_codes
-)
+from utility import logger, JobStatus, JobTypes, make_uri, retry, load_codes
 from database.db import get_session
 from database.models import (
     MusiqlRepository,
@@ -136,8 +129,8 @@ def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
         data = r.json()
         if data and data.get("is_playing") and data["item"]["uri"] == uri:
             return data.get("progress_ms", 0)
-        
-        item = data.get('item') if data else None
+
+        item = data.get("item") if data else None
         logger.debug(
             f"wait_until_playing: is_playing={data.get('is_playing') if data else None}, item={item.get('uri') if item else None}"
         )
@@ -197,7 +190,7 @@ async def scrape_records(code_holder, job: UploadJobs):
 
                 result = await session.execute(stmt)
                 reported_record: MusiqlRepository = result.scalar_one_or_none()
-                
+
                 if reported_record is None:
                     raise ValueError(
                         f"no record linked to {JobTypes.correction} uri {job.uri}"
@@ -207,7 +200,7 @@ async def scrape_records(code_holder, job: UploadJobs):
 
         else:
             raise ValueError(f"unsupported job type {job.job_type}")
-        
+
         async with session_maker() as session:
             if job.status == JobStatus.failed:
                 stmt = (
@@ -421,7 +414,7 @@ async def scrape_records(code_holder, job: UploadJobs):
                 job.progress += 1
 
             if job.progress == job.subtasks:
-                job.status = JobStatus.finished 
+                job.status = JobStatus.finished
             session.add(job)
 
             await session.commit()
@@ -432,8 +425,6 @@ async def scrape_records(code_holder, job: UploadJobs):
         s3_api.commit_multipart_upload(
             obj_path=obj_key, key=obj_key, upload_id=upload_id, parts=parts
         )
-
-
 
 
 async def collect_jobs() -> Optional[List[UploadJobs]]:
@@ -483,6 +474,7 @@ async def main():
             finally:
                 shutil.rmtree("musiql_dump")
                 os.mkdir("musiql_dump")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
