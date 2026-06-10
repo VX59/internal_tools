@@ -338,7 +338,7 @@ async def scrape_records(code_holder, job: UploadJobs):
                         album_uri=album_db_obj.uri,
                         title=record.name,
                         mime="audio/mpeg",
-                        added_by="derosaj",
+                        added_by=job.requestor.split("-")[0],
                         duration_ms=record.duration_ms,
                         external_uri=external_record_uri,
                     )
