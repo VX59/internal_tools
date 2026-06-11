@@ -140,7 +140,7 @@ def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
 
 
 async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]):
-    for i, record, job in tqdm(enumerate(items)):
+    for i, (record, job) in tqdm(enumerate(items)):
         try:
             external_record_uri = record.uri
 
