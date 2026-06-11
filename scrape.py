@@ -1,3 +1,4 @@
+import random
 import requests
 from datetime import datetime
 import os
@@ -30,6 +31,7 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 import asyncio
 import pickle
+import random
 from typing import List, Optional
 
 
@@ -482,6 +484,8 @@ async def main():
                 result = list(zip(records_progress, [job]*len(records_progress)))
                 all_records_list.extend(result)
 
+            random.shuffle(all_records_list)
+
             while all_records_list:
                 chunk = all_records_list[:10]
                 all_records_list = all_records_list[10:]
@@ -491,7 +495,6 @@ async def main():
         for records_chunk in get_records():
             records, jobs = records_chunk
             items = list(zip(records, jobs))
-            logger.debug(items)
             await scrape_records(code_holder=code_holder, items = items)
 
         shutil.rmtree("musiql_dump")
