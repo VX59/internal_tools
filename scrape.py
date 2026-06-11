@@ -466,11 +466,11 @@ async def main():
                 record_list: list[spotify_item] = pickle.loads(data)
                 records_progress: list[spotify_item] = record_list[job.progress:]
                 
-                jobs = [job]*len(records_progress)
-                result = list(zip(records_progress, jobs))
+                result = list(zip(records_progress, [job]*len(records_progress)))
                 all_records_list.extend(result)
-                
-            yield all_records_list[:10]
+            
+            while all_records_list:
+                yield all_records_list[:10]
             
 
         for records_chunk in get_records:
