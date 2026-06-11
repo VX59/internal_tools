@@ -507,7 +507,7 @@ async def main():
 
                 yield [r for r, _ in chunk], [j for _, j in chunk]
 
-        for records_chunk in get_records(jobs):
+        async for records_chunk in get_records(jobs):
             records, jobs = records_chunk
             items = list(zip(records, jobs))
             await scrape_records(code_holder=code_holder, items=items)
