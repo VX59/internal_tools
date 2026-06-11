@@ -459,9 +459,14 @@ async def main():
         def get_records():
             all_records_list = []
             for job in jobs:
-                metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
-                file_stream = s3_api.pull_obj_stream(metadata_obj_key)
-                data = file_stream.read()
+                try:
+                    metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
+                    file_stream = s3_api.pull_obj_stream(metadata_obj_key)
+                    data = file_stream.read()
+                
+                except KeyError as e:
+                    logger.warning(str(e))
+                    continue
 
                 record_list: list[spotify_item] = pickle.loads(data)
                 records_progress: list[spotify_item] = record_list[job.progress:]
