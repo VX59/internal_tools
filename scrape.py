@@ -129,7 +129,7 @@ def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
             continue
         data = r.json()
         if data and data.get("is_playing") and data["item"]["uri"] == uri:
-            yield data.get("progress_ms",0)
+            yield data.get("progress_ms", 0)
             return
 
         item = data.get("item") if data else None
@@ -225,7 +225,14 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             proc = record_virtual_audio(output_file=obj_key)
             time.sleep(1.0)
             trigger_playback(code_holder, record.uri)
-            progress_ms = next((v for v in wait_until_playing(code_holder, record.uri) if v is not None), 0)
+            progress_ms = next(
+                (
+                    v
+                    for v in wait_until_playing(code_holder, record.uri)
+                    if v is not None
+                ),
+                0,
+            )
             t_detected = time.time()
 
             remaining_s = (record.duration_ms - progress_ms) / 1000 + 1.0
