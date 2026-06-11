@@ -480,7 +480,9 @@ async def main():
 
         for records_chunk in get_records():
             try:
-                records, job = records_chunk
+                records, job = zip(*records_chunk)
+                records = list(records)
+                
                 logger.debug(records)
                 await scrape_records(code_holder=code_holder, job=job, record_list=records)
             except Exception as e:
