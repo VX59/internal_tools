@@ -473,7 +473,7 @@ async def main():
                 yield all_records_list[:10]
             
 
-        for records_chunk in get_records:
+        for records_chunk in get_records():
             try:
                 records, job = records_chunk
                 logger.debug(records)
