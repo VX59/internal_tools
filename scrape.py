@@ -502,7 +502,8 @@ async def main():
                 chunk = all_records_list[:10]
                 all_records_list = all_records_list[10:]
                 check_jobs = await collect_jobs()
-                if check_jobs is not jobs:
+                if {job.uri for job in check_jobs} != {job.uri for job in jobs}:
+                    logger.info(f"remixing jobs with new records + {len(check_jobs)}")
                     get_records(check_jobs)
 
                 yield [r for r, _ in chunk], [j for _, j in chunk]
