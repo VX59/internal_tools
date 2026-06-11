@@ -478,7 +478,7 @@ async def main():
         if not (jobs := await collect_jobs()):
             time.sleep(20)
 
-        def get_records():
+        async def get_records(jobs):
             all_records_list = []
             for job in jobs:
                 try:
@@ -501,9 +501,13 @@ async def main():
             while all_records_list:
                 chunk = all_records_list[:10]
                 all_records_list = all_records_list[10:]
+                check_jobs = await collect_jobs()
+                if check_jobs is not jobs:
+                    get_records(check_jobs)
+
                 yield [r for r, _ in chunk], [j for _, j in chunk]
 
-        for records_chunk in get_records():
+        for records_chunk in get_records(jobs):
             records, jobs = records_chunk
             items = list(zip(records, jobs))
             await scrape_records(code_holder=code_holder, items=items)
