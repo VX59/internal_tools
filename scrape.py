@@ -481,9 +481,11 @@ async def main():
                 
                 result = list(zip(records_progress, [job]*len(records_progress)))
                 all_records_list.extend(result)
-            
+
             while all_records_list:
-                yield records_progress[:10], [job]*len(records_progress)[:10]
+                chunk = all_records_list[:10]
+                all_records_list = all_records_list[10:]
+                yield [r for r, _ in chunk], [j for _, j in chunk]
             
 
         for records_chunk in get_records():
