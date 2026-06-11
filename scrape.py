@@ -31,7 +31,6 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 import asyncio
 import pickle
-import random
 from typing import List, Optional
 
 
@@ -130,18 +129,19 @@ def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
             continue
         data = r.json()
         if data and data.get("is_playing") and data["item"]["uri"] == uri:
-            return data.get("progress_ms", 0)
+            yield data.get("progress_ms",0)
+            return
 
         item = data.get("item") if data else None
         logger.debug(
             f"wait_until_playing: is_playing={data.get('is_playing') if data else None}, item={item.get('uri') if item else None}"
         )
         time.sleep(poll_interval)
-
+        yield None
     return 0
 
 
-async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]):
+async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs]]):
     for i, (record, job) in tqdm(enumerate(items)):
         try:
             external_record_uri = record.uri
@@ -347,10 +347,12 @@ async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]
                             select(MusiqlRepository, Artists)
                             .join(
                                 RecordArtistAssociation,
-                                MusiqlRepository.uri == RecordArtistAssociation.record_uri,
+                                MusiqlRepository.uri
+                                == RecordArtistAssociation.record_uri,
                             )
                             .join(
-                                Artists, RecordArtistAssociation.artist_uri == Artists.uri
+                                Artists,
+                                RecordArtistAssociation.artist_uri == Artists.uri,
                             )
                         ).where(
                             MusiqlRepository.external_uri == record_db_obj.external_uri,
@@ -370,7 +372,10 @@ async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]
                                 AlbumArtistAssociation,
                                 Albums.uri == AlbumArtistAssociation.album_uri,
                             )
-                            .join(Artists, AlbumArtistAssociation.artist_uri == Artists.uri)
+                            .join(
+                                Artists,
+                                AlbumArtistAssociation.artist_uri == Artists.uri,
+                            )
                         ).where(
                             Albums.external_uri == album_db_obj.external_uri,
                             Artists.external_uri == artist.external_uri,
@@ -387,7 +392,8 @@ async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]
                         select(Users, MusiqlRepository)
                         .join(UserLirbary, Users.uri == UserLirbary.user_id)
                         .join(
-                            MusiqlRepository, UserLirbary.record_id == MusiqlRepository.uri
+                            MusiqlRepository,
+                            UserLirbary.record_id == MusiqlRepository.uri,
                         )
                         .where(
                             MusiqlRepository.external_uri == record_db_obj.external_uri,
@@ -429,7 +435,7 @@ async def scrape_records(code_holder,items:list[tuple[spotify_item, UploadJobs]]
                 await session.commit()
 
             logger.exception(e)
-        
+
 
 async def collect_jobs() -> Optional[List[UploadJobs]]:
     async with session_maker() as session:
@@ -449,7 +455,6 @@ async def collect_jobs() -> Optional[List[UploadJobs]]:
         return jobs
 
 
-
 async def main():
 
     code_holder = load_codes(s3_api)
@@ -465,7 +470,7 @@ async def main():
     while True:
         if not (jobs := await collect_jobs()):
             time.sleep(20)
-        
+
         def get_records():
             all_records_list = []
             for job in jobs:
@@ -473,15 +478,15 @@ async def main():
                     metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
                     file_stream = s3_api.pull_obj_stream(metadata_obj_key)
                     data = file_stream.read()
-                
+
                 except KeyError as e:
                     logger.warning(str(e))
                     continue
 
                 record_list: list[spotify_item] = pickle.loads(data)
-                records_progress: list[spotify_item] = record_list[job.progress:]
-                
-                result = list(zip(records_progress, [job]*len(records_progress)))
+                records_progress: list[spotify_item] = record_list[job.progress :]
+
+                result = list(zip(records_progress, [job] * len(records_progress)))
                 all_records_list.extend(result)
 
             random.shuffle(all_records_list)
@@ -490,12 +495,11 @@ async def main():
                 chunk = all_records_list[:10]
                 all_records_list = all_records_list[10:]
                 yield [r for r, _ in chunk], [j for _, j in chunk]
-            
 
         for records_chunk in get_records():
             records, jobs = records_chunk
             items = list(zip(records, jobs))
-            await scrape_records(code_holder=code_holder, items = items)
+            await scrape_records(code_holder=code_holder, items=items)
 
         shutil.rmtree("musiql_dump")
         os.mkdir("musiql_dump")
