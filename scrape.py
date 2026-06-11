@@ -139,15 +139,8 @@ def wait_until_playing(code_holder, uri, timeout=15, poll_interval=0.5):
     return 0
 
 
-async def scrape_records(code_holder, job: UploadJobs):
-    metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
-    file_stream = s3_api.pull_obj_stream(metadata_obj_key)
-    data = file_stream.read()
-
-    record_list: list[spotify_item] = pickle.loads(data)
-    records_progress: list[spotify_item] = record_list[job.progress :]
-
-    for i, record in tqdm(enumerate(records_progress)):
+async def scrape_records(code_holder,job:UploadJobs, record_list:list[spotify_item]):
+    for i, record in tqdm(enumerate(record_list)):
         external_record_uri = record.uri
 
         if job.job_type == JobTypes.integration:
@@ -419,6 +412,7 @@ async def scrape_records(code_holder, job: UploadJobs):
 
             await session.commit()
 
+        metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
         if job.status == JobStatus.finished:
             s3_api.delete_object(metadata_obj_key)
 
@@ -445,6 +439,7 @@ async def collect_jobs() -> Optional[List[UploadJobs]]:
         return jobs
 
 
+
 async def main():
 
     code_holder = load_codes(s3_api)
@@ -460,10 +455,29 @@ async def main():
     while True:
         if not (jobs := await collect_jobs()):
             time.sleep(20)
+        
+        def get_records():
+            all_records_list = []
+            for job in jobs:
+                metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
+                file_stream = s3_api.pull_obj_stream(metadata_obj_key)
+                data = file_stream.read()
 
-        for job in jobs:
+                record_list: list[spotify_item] = pickle.loads(data)
+                records_progress: list[spotify_item] = record_list[job.progress:]
+                
+                jobs = [job]*len(records_progress)
+                result = list(zip(records_progress, jobs))
+                all_records_list.extend(result)
+                
+            yield all_records_list[:10]
+            
+
+        for records_chunk in get_records:
             try:
-                await scrape_records(code_holder=code_holder, job=job)
+                records, job = records_chunk
+                logger.debug(records)
+                await scrape_records(code_holder=code_holder, job=job, record_list=records)
             except Exception as e:
                 async with session_maker() as session:
                     job.status = JobStatus.failed
