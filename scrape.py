@@ -480,6 +480,8 @@ async def main():
 
         async def get_records(jobs):
             all_records_list = []
+
+            n = len(jobs)
             for job in jobs:
                 try:
                     metadata_obj_key = f"add_music_jobs/{job.uri}.dump"
@@ -493,20 +495,20 @@ async def main():
                 record_list: list[spotify_item] = pickle.loads(data)
                 records_progress: list[spotify_item] = record_list[job.progress :]
 
-                result = list(zip(records_progress, [job] * len(records_progress)))
+                result = list(zip(records_progress, [job] * len(records_progress), [n]*len(records_progress)))
                 all_records_list.extend(result)
 
             random.shuffle(all_records_list)
-
-            while all_records_list:
-                chunk = all_records_list[:10]
-                all_records_list = all_records_list[10:]
+            all_records_sorted = sorted(all_records_list, key=lambda x: x[2])
+            while all_records_sorted:
+                chunk = all_records_sorted[:10]
+                all_records_sorted = all_records_sorted[10:]
                 check_jobs = await collect_jobs()
                 if {job.uri for job in check_jobs} != {job.uri for job in jobs}:
                     logger.info(f"remixing jobs with new records + {len(check_jobs)}")
                     get_records(check_jobs)
 
-                yield [r for r, _ in chunk], [j for _, j in chunk]
+                yield [r for r, _, _ in chunk], [j for _, j, _ in chunk]
 
         async for records_chunk in get_records(jobs):
             records, jobs = records_chunk
