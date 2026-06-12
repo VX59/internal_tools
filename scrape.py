@@ -221,7 +221,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             obj_key = f"musiql_dump/{internal_record_uri}.wav"
 
             os.makedirs("musiql_dump", exist_ok=True)
-            logger.debug(f"play {record.name} by {record.artists}")
+            logger.debug(f"play {record.name} by {[artist.name for artist in record.artists]}")
 
             t_rec_start = time.time()
             proc = record_virtual_audio(output_file=obj_key)
