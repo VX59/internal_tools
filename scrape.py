@@ -542,4 +542,4 @@ async def _main():
 
 
 def main():
-    asyncio.run(main())
+    asyncio.run(_main())
