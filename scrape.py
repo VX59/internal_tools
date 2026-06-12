@@ -157,12 +157,11 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
                 if result.first() is not None:
                     continue
 
-                check_retry = select(UploadJobs).where(
-                    UploadJobs.err_msg is not None,
-                    UploadJobs.retry == True,
-                    UploadJobs.status != JobStatus.finished,
-                    UploadJobs.uri == job.uri
-                )
+            if job.retry == False and job.err_msg is not None:
+                continue
+
+            if job.err_msg is not None and job.retry == True:
+                logger.debug(f"attempt to retry job {job.uri}")
 
             if job.job_type == JobTypes.integration:
                 async with session_maker() as session:
