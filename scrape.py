@@ -459,7 +459,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
                 job.status = JobStatus.failed
                 job.err_msg = str(e)
                 if e is not ValueError:
-                    logger.execption(f"Job failed with a fatal error: {str(e)}")
+                    logger.exception(f"Job failed with a fatal error: {str(e)}")
                     job.retry = True
 
                 session.add(job)
