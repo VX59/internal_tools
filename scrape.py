@@ -150,6 +150,8 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
                 async with session_maker() as session:
                     check_record = select(MusiqlRepository).where(
                         MusiqlRepository.external_uri == external_record_uri,
+                        MusiqlRepository.err_msg is not None,
+                        MusiqlRepository.retry == False
                     )
 
                     result = await session.execute(check_record)
