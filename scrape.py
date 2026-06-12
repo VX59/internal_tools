@@ -490,9 +490,7 @@ async def main():
     activate_device(code_holder, device_id)
 
     while True:
-        if not (jobs := await collect_jobs()):
-            time.sleep(20)
-
+        jobs = await collect_jobs()
         if jobs is None:
             time.sleep(20)
 
