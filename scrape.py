@@ -493,6 +493,9 @@ async def main():
         if not (jobs := await collect_jobs()):
             time.sleep(20)
 
+        if jobs is None:
+            time.sleep(20)
+
         async def get_records(jobs):
             all_records_list = []
 
