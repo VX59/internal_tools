@@ -146,12 +146,28 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
         try:
             external_record_uri = record.uri
 
+            async with session_maker() as session:
+                check_job = select(UploadJobs).where(
+                    UploadJobs.err_msg is not None,
+                    UploadJobs.retry == False,
+                    UploadJobs.uri == job.uri
+                )
+
+                result = await session.execute(check_job)
+                if result.first() is not None:
+                    continue
+
+                check_retry = select(UploadJobs).where(
+                    UploadJobs.err_msg is not None,
+                    UploadJobs.retry == True,
+                    UploadJobs.status != JobStatus.finished,
+                    UploadJobs.uri == job.uri
+                )
+
             if job.job_type == JobTypes.integration:
                 async with session_maker() as session:
                     check_record = select(MusiqlRepository).where(
                         MusiqlRepository.external_uri == external_record_uri,
-                        MusiqlRepository.err_msg is not None,
-                        MusiqlRepository.retry == False
                     )
 
                     result = await session.execute(check_record)
@@ -444,7 +460,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
                 job.status = JobStatus.failed
                 job.err_msg = str(e)
                 if e is not ValueError:
-                    logger.error(f"Job failed with a fatal error: {str(e)}")
+                    logger.execption(f"Job failed with a fatal error: {str(e)}")
                     job.retry = True
 
                 session.add(job)
