@@ -150,7 +150,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
                 check_job = select(UploadJobs).where(
                     UploadJobs.err_msg is not None,
                     UploadJobs.retry == False,
-                    UploadJobs.uri == job.uri
+                    UploadJobs.uri == job.uri,
                 )
 
                 result = await session.execute(check_job)
@@ -238,7 +238,9 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             obj_key = f"musiql_dump/{internal_record_uri}.wav"
 
             os.makedirs("musiql_dump", exist_ok=True)
-            logger.debug(f"play {record.name} by {[artist.name for artist in record.artists]}")
+            logger.debug(
+                f"play {record.name} by {[artist.name for artist in record.artists]}"
+            )
 
             t_rec_start = time.time()
             proc = record_virtual_audio(output_file=obj_key)
@@ -519,7 +521,13 @@ async def main():
                 record_list: list[spotify_item] = pickle.loads(data)
                 records_progress: list[spotify_item] = record_list[job.progress :]
 
-                result = list(zip(records_progress, [job] * len(records_progress), [n]*len(records_progress)))
+                result = list(
+                    zip(
+                        records_progress,
+                        [job] * len(records_progress),
+                        [n] * len(records_progress),
+                    )
+                )
                 all_records_list.extend(result)
 
             random.shuffle(all_records_list)
