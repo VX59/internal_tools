@@ -221,6 +221,8 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             obj_key = f"musiql_dump/{internal_record_uri}.wav"
 
             os.makedirs("musiql_dump", exist_ok=True)
+            logger.debug(f"play {record.name} by {record.artists}")
+
             t_rec_start = time.time()
             proc = record_virtual_audio(output_file=obj_key)
             time.sleep(1.0)
@@ -438,6 +440,11 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
         except Exception as e:
             async with session_maker() as session:
                 job.status = JobStatus.failed
+                job.err_msg = str(e)
+                if e is not ValueError:
+                    logger.execption(f"Job failed with a fatal error: {str(e)}")
+                    job.retry = True
+
                 session.add(job)
                 await session.commit()
 
