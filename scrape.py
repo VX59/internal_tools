@@ -477,7 +477,7 @@ async def collect_jobs() -> Optional[List[UploadJobs]]:
         return jobs
 
 
-async def main():
+async def _main():
 
     code_holder = load_codes(s3_api)
 
@@ -541,5 +541,5 @@ async def main():
         os.mkdir("musiql_dump")
 
 
-if __name__ == "__main__":
+def main():
     asyncio.run(main())
