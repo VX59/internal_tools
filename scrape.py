@@ -149,7 +149,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             if job.status == JobStatus.failed and not job.retry:
                 continue
 
-            if job.status == JobStatus.failed and job.retry == True:
+            if job.status == JobStatus.failed and job.retry:
                 logger.debug(f"attempt to retry job {job.uri}")
 
             if job.job_type == JobTypes.integration:
