@@ -521,10 +521,15 @@ async def _main():
                 all_records_list.extend(result)
 
             random.shuffle(all_records_list)
-            all_records_sorted = sorted(all_records_list, key=lambda x: x[2])
-            while all_records_sorted:
-                chunk = all_records_sorted[:10]
+
+            chunks = []
+            while all_records_list:
+                chunks.append(all_records_list[:10])
                 all_records_sorted = all_records_sorted[10:]
+        
+            sorted_chunks = sorted(chunks, key=lambda chunk: sum(r[2] for r in chunk))
+            
+            for chunk in sorted_chunks:
                 check_jobs = await collect_jobs()
                 if {job.uri for job in check_jobs} != {job.uri for job in jobs}:
                     logger.info(f"remixing jobs with new records + {len(check_jobs)}")
