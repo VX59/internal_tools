@@ -525,7 +525,7 @@ async def _main():
             chunks = []
             while all_records_list:
                 chunks.append(all_records_list[:10])
-                all_records_sorted = all_records_sorted[10:]
+                all_records_list = all_records_list[10:]
         
             sorted_chunks = sorted(chunks, key=lambda chunk: sum(r[2] for r in chunk))
             
