@@ -149,7 +149,7 @@ async def scrape_records(code_holder, items: list[tuple[spotify_item, UploadJobs
             if job.status == JobStatus.failed and not job.retry:
                 continue
 
-            if job.status == JobStatus.failed and job.retry == True:
+            if job.status == JobStatus.failed and job.retry:
                 logger.debug(f"attempt to retry job {job.uri}")
 
             if job.job_type == JobTypes.integration:
@@ -526,9 +526,9 @@ async def _main():
             while all_records_list:
                 chunks.append(all_records_list[:10])
                 all_records_list = all_records_list[10:]
-        
+
             sorted_chunks = sorted(chunks, key=lambda chunk: sum(r[2] for r in chunk))
-            
+
             for chunk in sorted_chunks:
                 check_jobs = await collect_jobs()
                 if {job.uri for job in check_jobs} != {job.uri for job in jobs}:
